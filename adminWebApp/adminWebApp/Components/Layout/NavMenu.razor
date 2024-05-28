@@ -20,13 +20,13 @@
             <AuthorizeView>
                 <Authorized>
                     <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="courses">
+                        <NavLink class="nav-link" href="/Account/courses">
                             <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Courses
                         </NavLink>
                     </div>
                     <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="users">
-                            <span class="bi fas fa-user-plus" aria-hidden="true"></span> Users
+                        <NavLink class="nav-link" href="/Account/users">
+                            <span class="bi fa-solid fa-users" aria-hidden="true" style="font-size:18px"></span> Users
                         </NavLink>
                     </div>
                     <div class="nav-item px-3">
@@ -45,11 +45,6 @@
                     </div>
                 </Authorized>
                 <NotAuthorized>
-                  @*   <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="Account/Register">
-                            <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                        </NavLink>
-                    </div> *@
                     <div class="nav-item px-3">
                         <NavLink class="nav-link" href="Account/Login">
                             <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login

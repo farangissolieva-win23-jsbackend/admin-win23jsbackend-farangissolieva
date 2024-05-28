@@ -1,0 +1,54 @@
+﻿#users {
+    .container {
+        h2{
+            left: 5px;
+        } 
+        .content-contaier {
+            padding-top: 50px;
+            padding-bottom: 60px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem 0.5rem;
+
+            @include lg {
+                grid-template-columns: 1fr 1fr;
+                gap: 2.5rem 1.7rem;
+            }
+
+            @include xl {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+            }
+
+            .user-card {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+
+                .buttons {
+                    margin: 20px 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 20px;
+                }
+            }
+        }
+    }
+}
+
+.modal {
+   
+    .modal-content {
+        img {
+            width: 100px;
+            height: 100px;
+            margin: 20px;
+        }
+
+        .form-content {
+            margin: 20px;
+        }
+    }
+}
+

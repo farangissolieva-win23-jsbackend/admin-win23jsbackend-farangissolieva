@@ -1,0 +1,228 @@
+﻿@page "/account/users"
+
+@rendermode InteractiveServer
+@attribute [Authorize]
+<PageTitle>User Management</PageTitle>
+<section id="users">
+	<h1>User Management</h1>
+	<div class="container">
+		<div class="content-contaier">
+			@if (users == null)
+			{
+				<p><em>No users founded yet. Please wait...</em></p>
+			} else
+			{
+				@foreach (var user in users)
+				{
+					<div class="user-card">
+						@if (!string.IsNullOrEmpty(user.UserProfile?.FistName) || !string.IsNullOrEmpty(user.UserProfile?.LastName))
+						{
+							<h4>@user.UserProfile?.FistName @user.UserProfile?.LastName</h4>
+						}
+						@if (!string.IsNullOrEmpty(user.Email))
+						{
+							<p>Email: @user.Email</p>
+						}
+						<img src="@user.UserProfile?.ProfileImg" alt="User Profile Image">
+						<div class="buttons">
+							<button class="btn-red" @onclick="() => DeleteUser(user.Id!)">Delete</button>
+							<button class="btn-theme" @onclick="() => OpenUpdateUserModal(user)">Update</button>
+						</div>
+					</div>
+				}
+			}	
+			
+		</div>
+	</div>
+
+</section>
+
+@if (selectedUser != null)
+{
+	
+	<div class="modal" style="display: block;">
+		<div class="modal-content">
+			<span class="close" @onclick="CloseUpdateUserModal"><i class="fas fa-times"></i></span>
+			<h2 class="form-content">Update User</h2>
+			 <StatusMessage Message="@errorMessage" />
+			@if (!string.IsNullOrEmpty(selectedUser.UserProfile?.ProfileImg))
+			{
+				<img src="@selectedUser.UserProfile.ProfileImg" alt="Profile"  />
+			}
+
+			<EditForm class="form-content" FormName="updateuser" Model="selectedUser" OnValidSubmit="HandleUpdateUser">
+				<DataAnnotationsValidator />
+				<label for="firstName">First Name:</label>
+				<InputText id="firstName" @bind-Value="selectedUser.UserProfile!.FistName" /><br />
+
+				<label for="lastName">Last Name:</label>
+				<InputText id="lastName" @bind-Value="selectedUser.UserProfile.LastName" /><br />
+
+
+				<label for="email">Email:</label>
+				<InputText id="email" @bind-Value="selectedUser.Email" /><br />
+
+				<label for="phoneNumber">Phone Number:</label>
+				<InputText id="phoneNumber" @bind-Value="selectedUser.UserProfile.Telephone" /><br />
+
+				<label for="profileImage">Profile Image:</label>
+				<InputText id="profileImage" @bind-Value="selectedUser.UserProfile.ProfileImg" /><br />
+
+				<label for="biography">Biography:</label>
+				<InputTextArea id="biography" @bind-Value="selectedUser.UserProfile.Biography"></InputTextArea><br />
+
+				<label for="addressLine1">Address Line 1:</label>
+				<InputText id="addressLine1" @bind-Value="selectedUser.UserAddress!.AddressLine_1" /><br />
+
+				<label for="addressLine2">Address Line 2:</label>
+				<InputText id="addressLine2" @bind-Value="selectedUser.UserAddress.AddressLine_2" /><br />
+
+				<label for="postalCode">Postal Code:</label>
+				<InputText id="postalCode" @bind-Value="selectedUser.UserAddress.PostalCode" /><br />
+
+				<label for="city">City:</label>
+				<InputText id="city" @bind-Value="selectedUser.UserAddress.City" /><br />
+
+				<button class="btn-theme" type="submit">Update</button>
+			</EditForm>
+		</div>
+	</div>
+	
+	
+}
+
+@code {
+	private ApplicationUser[]? users;
+	private string? errorMessage { get; set; }
+	[SupplyParameterFromForm]
+	public ApplicationUser selectedUser { get; set; } = null!;
+
+	private async Task RefreshUserList()
+	{
+		try
+		{
+			users = await Http.GetFromJsonAsync<ApplicationUser[]>(Configuration["Users_Get_Api_Uri"]);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		await RefreshUserList();
+	}
+
+	private async Task DeleteUser(string id)
+	{
+		try
+		{
+			if(id != null)
+			{
+				var updateUrl = Configuration["User_Delete_Api_Uri"]!.Replace("{userId}", id);
+				var result = await Http.DeleteAsync(updateUrl);
+				await RefreshUserList();
+				errorMessage = "Success: The user's successfully deleted!";
+			}
+			else
+			{
+				errorMessage = "Error: Something went wrong, please try later!";
+			}
+		} catch
+		{
+			errorMessage = "Error: Something went wrong, please try later!";
+		}
+
+	}
+
+	private async Task HandleUpdateUser()
+	{
+		if (selectedUser != null)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(selectedUser.Email))
+				{
+					selectedUser.UserName = selectedUser.Email;
+					selectedUser.NormalizedUserName = selectedUser.Email;
+					selectedUser.NormalizedEmail = selectedUser.Email;
+
+				}
+				
+				var updateUrl = Configuration["User_Update_Api_Uri"]!.Replace("{userId}", selectedUser.Id);
+				var result = await Http.PutAsJsonAsync(updateUrl, selectedUser);
+				if (result.IsSuccessStatusCode)
+				{
+					errorMessage = "Success: The user's data successfully updated!";
+					await RefreshUserList();
+				}
+				errorMessage = "Error: Something went wrong, please try later!";
+				CloseUpdateUserModal();
+			}
+			catch 
+			{
+				errorMessage = "Error: Something went wrong, please try later!";
+			}
+		}
+	}
+
+
+	private void OpenUpdateUserModal(ApplicationUser user)
+	{
+		selectedUser = user;
+		if (selectedUser.UserProfile == null)
+		{
+			selectedUser.UserProfile = new UserProfile();
+		}
+		if (selectedUser.UserAddress == null)
+		{
+			selectedUser.UserAddress = new UserAddress();
+		}
+		StateHasChanged(); 
+	}
+
+	private void CloseUpdateUserModal()
+	{
+		selectedUser = null!;
+	}
+
+
+	public class ApplicationUser
+	{
+		public UserProfile? UserProfile { get; set; } = new UserProfile();
+		public UserAddress? UserAddress { get; set; } = new UserAddress();
+		public string? Id { get; set; }
+        public string? UserName { get; set; }
+        public string? NormalizedUserName { get; set; }
+        public string? Email { get; set; }
+        public string? NormalizedEmail { get; set; }
+        public bool? EmailConfirmed { get; set; }
+        public object? PhoneNumber { get; set; }
+        public bool? PhoneNumberConfirmed { get; set; }
+ 
+    }
+
+	public class UserAddress
+	{
+		public string? AddressLine_1 { get; set; } 
+		public string? AddressLine_2 { get; set; }
+		public string? PostalCode { get; set; }
+		public string? City { get; set; }
+
+	}
+
+	public class UserProfile
+	{
+		public string? FistName { get; set; } 
+		public string? LastName { get; set; }
+		public string? ProfileImg { get; set; }
+		public string? Biography { get; set; }
+		public string? Telephone { get; set; }
+	}
+
+
+}
+
+
+    

@@ -34,6 +34,9 @@ html, body {
     background-color: var(--color-gray-000);
   
 }
+.nav-link {
+    background-color: var(--color-gray-700);
+}
 
 .text-xs { @include text-xs; }
 .text-s { @include text-s; }

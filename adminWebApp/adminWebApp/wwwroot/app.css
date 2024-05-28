@@ -95,6 +95,10 @@ html, body {
   background-color: var(--color-gray-000);
 }
 
+.nav-link {
+  background-color: var(--color-gray-700);
+}
+
 .text-xs {
   line-height: 160%;
   font-weight: 400;
@@ -3049,4 +3053,48 @@ footer .container .copyright span {
 }
 .main-navigation .nav-background {
   background-color: var(--color-gray-800) !important;
+}
+
+#users .container h2 {
+  left: 5px;
+}
+#users .container .content-contaier {
+  padding-top: 50px;
+  padding-bottom: 60px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 0.5rem;
+}
+@media (min-width: 992px) {
+  #users .container .content-contaier {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem 1.7rem;
+  }
+}
+@media (min-width: 1200px) {
+  #users .container .content-contaier {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+#users .container .content-contaier .user-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+#users .container .content-contaier .user-card .buttons {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.modal .modal-content img {
+  width: 100px;
+  height: 100px;
+  margin: 20px;
+}
+.modal .modal-content .form-content {
+  margin: 20px;
 }
