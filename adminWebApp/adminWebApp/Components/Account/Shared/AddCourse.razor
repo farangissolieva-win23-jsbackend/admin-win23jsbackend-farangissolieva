@@ -22,8 +22,16 @@
                     <InputTextArea @bind-Value="CourseForm.Ingress" />
                 </div>
                 <div class="input-group">
+                    <label>Author:</label>
+                    <InputTextArea @bind-Value="CourseForm.Authors[0].AuthorName" />
+                </div>
+                <div class="input-group">
                     <label>Hours:</label>
                     <InputText @bind-Value="CourseForm.Hours" />
+                </div>
+                <div class="input-group">
+                    <label>Image Title URL:</label>
+                    <InputText @bind-Value="CourseForm.ImgUrl" />
                 </div>
                 <div class="input-group">
                     <label>Image Header URL:</label>
@@ -47,26 +55,6 @@
                     <label>Content Description:</label>
                     <InputTextArea @bind-Value="CourseForm.Content.Description" />
                 </div>
-
-                <div class="input-group">
-                    <label>Program Details:</label>
-                    @if (CourseForm.Content != null && CourseForm.Content.ProgramDetails != null)
-                    {
-                        @foreach (var detail in CourseForm.Content.ProgramDetails)
-                        {
-                            @if(detail != null)
-                            {
-                                <div class="input-group">
-                                    <label>Title:</label>
-                                    <InputText @bind-Value="detail.Title" />
-                                    <label>Description:</label>
-                                    <InputTextArea @bind-Value="detail.Description" />
-                                </div>
-                            }
-                            
-                        }
-                    }
-                </div>
                                            
                 <div class="input-group">
                     <label>Price:</label>
@@ -77,6 +65,10 @@
                     <InputNumber @bind-Value="CourseForm.Prices.Discount" />
                 </div>
                 <div class="input-group">
+                    <label>Currency:</label>
+                    <InputText @bind-Value="CourseForm.Prices.Currency" />
+                </div>
+                <div class="input-group">
                     <label>Is Bestseller:</label>
                     <InputCheckbox @bind-Value="CourseForm.IsBestseller" />
                 </div>
@@ -84,20 +76,7 @@
                     <label>Is Digital:</label>
                     <InputCheckbox @bind-Value="CourseForm.IsDigital" />
                 </div>
-                      
-                <div class="input-group">
-                    <label>Author Name:</label>
-                    <InputText @bind-Value="CourseForm.Authors[0].AuthorName" />
-                    <label>Author Description:</label>
-                    <InputTextArea @bind-Value="CourseForm.Authors[0].AuthorDescription" />
-                    <label>Author Image URL:</label>
-                    <InputText @bind-Value="CourseForm.Authors[0].AuthorImageUrl" />
-                    <label>Subscribers:</label>
-                    <InputNumber @bind-Value="CourseForm.Authors[0].Subscribers" />
-                    <label>Followers:</label>
-                    <InputNumber @bind-Value="CourseForm.Authors[0].Followers" />
-                </div>
-                
+               
                 <div class="button-group input-group">
                     <button class="btn-theme" type="submit">Create Course</button>
                 </div>
@@ -128,14 +107,8 @@ else
         CourseForm = new Course
             {
                 Prices = new(),
-                Content = new()
-                {
-                    ProgramDetails = new List<ProgramDetailItem>
-                    {
-                     new ProgramDetailItem {Id =1, Title = "", Description = "" } 
-                    }
-                },
-                Authors = new List<Author>()
+                Content = new(),
+                Authors = new List<Author>(){new() {AuthorName = ""}}
             };
     }
 
@@ -167,14 +140,6 @@ else
                 likes
                 likePercentage
                 hours
-                authors {
-                    id
-                    authorName
-                    authorDescription
-                    authorImageUrl
-                    subscribers
-                    followers
-                }
                 prices {
                     currency
                     price
@@ -182,11 +147,10 @@ else
                 }
                 content {
                     description
-                    includes
-                    programDetails {
-                        id
-                        title
-                        description}}
+                }
+                authors {
+                    authorName
+                }
         }}";
         var input = new
         {
@@ -202,15 +166,6 @@ else
                     Likes = course.Likes,
                     LikePercentage = course.LikePercentage,
                     Hours = course.Hours,
-                    Authors = course.Authors?.Select(author => new AuthorCreateRequest
-                    {
-                        Id = author.Id,
-                        AuthorName = author.AuthorName,
-                        AuthorDescription = author.AuthorDescription,
-                        AuthorImageUrl = author.AuthorImageUrl,
-                        Subscribers = author.Subscribers,
-                        Followers = author.Followers
-                    }).ToList(),
                     Prices = new PriceCreateRequest
                     {
                         Currency = course.Prices?.Currency,
@@ -220,13 +175,15 @@ else
                     Content = new ContentCreateRequest
                     {
                         Description = course.Content?.Description,
-                        Includes = course.Content?.Includes,
-                        ProgramDetails = course.Content?.ProgramDetails?.Select(detail => new ProgramDetailItemCreateRequest
+                        
+                    },
+                    Authors = new List<AuthorCreateRequest>
+                    {
+                        new AuthorCreateRequest
                         {
-                            Id = detail.Id,
-                            Title = detail.Title,
-                            Description = detail.Description
-                        }).ToList()
+                            Id = 2,
+                            AuthorName = course.Authors?[0].AuthorName
+                        }
                     }
 
                 }

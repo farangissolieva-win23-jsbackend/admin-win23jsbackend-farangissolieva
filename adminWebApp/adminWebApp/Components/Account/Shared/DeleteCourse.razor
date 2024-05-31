@@ -1,0 +1,36 @@
+﻿@page "/courses/deleteCourse/{courseId}"
+<h3>DeleteCourse</h3>
+
+@code {
+
+	[Parameter]
+	public string? courseId { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (!string.IsNullOrEmpty(courseId))
+		{
+			await Delete(courseId);
+		}
+	}
+	private async Task Delete(string courseId)
+	{
+		var deleteCourseMutation = @"
+        mutation($id: String!) {
+            deleteCourse(id: $id)
+        }";
+
+		var input = new { id = courseId };
+
+		var response = await Http.PostAsJsonAsync(Configuration["CoursesGraphQLApiUri"], new { query = deleteCourseMutation, variables = input });
+		if (response.IsSuccessStatusCode)
+		{
+				NavigationManager.NavigateTo("account/courses");
+			
+		}
+		else
+		{
+			
+		}
+	}
+}

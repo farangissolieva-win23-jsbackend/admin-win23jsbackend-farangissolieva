@@ -1,7 +1,7 @@
 ﻿@page "/account/courses"
-@page "/courses"
 @using adminWebApp.Models
 @using adminWebApp.Services
+
 @inherits LayoutComponentBase
 @attribute [Authorize]
 @attribute [StreamRendering]
@@ -14,6 +14,7 @@
 			<h2 class="title">Courses</h2>
 			<div class="tool-bar">
 				<form id="categoryForm" method="get">
+					<a class="btn-theme" href="/courses/addcourse"><i class="fa-regular fa-plus"></i> New Course</a>
 					<div class="inputgroup">
 						<select id="categories" @* @bind="SelectedCategoryId" *@ @onchange="OnCategoryChange">
 							<option value="">All Categories</option>
@@ -37,9 +38,8 @@
 		</div>
 		@if (!string.IsNullOrEmpty(MessageText))
 		{
-			<StatusMessage />
+			<StatusMessage Message="@MessageText" />
 		}
-		<a class="btn-theme" href="/courses/addcourse"><i class="fa-regular fa-plus"></i> New Course</a>
 		<div class="content-contaier">
 			@if (courses == null)
 			{
@@ -48,13 +48,14 @@
 			{
 				@foreach (var course in courses)
 				{
+					var selectedCourse = course;
 					<div class="course-item">
 						<div class="image-container">
 							<img src="@course.ImgUrl" />
 					</div>
 
 						<div class="info">
-							<a class="menu-link" href="@($"courses/course/{course.Id}")">@course.Title</a>
+							<h5 >@course.Title</h5>
 							<p>By @course.AuthorName</p>
 							<div class="price">
 								@if (course.Discount == 0)
@@ -80,8 +81,8 @@
 						</div>
 
 						<div class="button-group">
-							<a class="btn-gray" href="@($"courses/course/{course.Id}")">Edit</a>
-							<button class="btn-red" @onclick="() => DeleteCourse(course.Id)">Delete</button>
+							<a class="btn-gray" href="@($"courses/course/{selectedCourse.Id}")">Edit</a>
+							<a class="btn-red" href="@($"courses/deleteCourse/{selectedCourse.Id}")">Delete</a>
 						</div>
 						
 					</div>
@@ -95,8 +96,7 @@
 </section>
 
 @code {
-	[SupplyParameterFromQuery]
-	public string? MessageType { get; set; }
+	
 	[SupplyParameterFromQuery]
 	public string? MessageText { get; set; }
 
@@ -114,7 +114,7 @@
 	protected override async Task OnInitializedAsync()
 	{
 		await LoadCoursesAsync();
-		await LoadCategoriesAsync();
+		// await LoadCategoriesAsync();
 
 	}
 
@@ -124,7 +124,7 @@
 		{
 			var query = new GraphQLQuery
 				{
-					Query = "{ getCourses { id title likes likePercentage isBestseller imgUrl authors{authorName} prices{price discount} categoryEntity{id name} hours reviews } }"
+					Query = "{ getCourses { id title likes likePercentage isBestseller imgUrl authors{authorName} prices{price discount} hours reviews } }"
 				};
 			
 			var response = await Http.PostAsJsonAsync(Configuration["CoursesGraphQLApiUri"], query);
@@ -146,11 +146,7 @@
 							Discount = course.GetProperty("prices").GetProperty("discount").GetDecimal(),
 							Hours = course.GetProperty("hours").GetString(),
 							Reviews = course.GetProperty("reviews").GetString(),
-							Category = new Category
-							{
-								Id = course.GetProperty("categoryEntity").GetProperty("id").GetInt32(),
-								Name = course.GetProperty("categoryEntity").GetProperty("name").GetString()!
-							}
+							
 
 					})
 					.ToList() ?? new List<CourseModel>();
@@ -161,46 +157,44 @@
 		catch (Exception ex)
 		{
 
-			MessageText = $"Something went wrong. Try again!";
-			MessageType = "error";
+			MessageText = $"error: Something went wrong. Try again!";
 			Console.WriteLine(ex);
 		}
 	}
 
-	private async Task LoadCategoriesAsync()
-	{
-		try
-		{
-			var categoriesQuery = new GraphQLQuery
-				{
-					Query = "{ getCourses { categoryEntity { id name } } }"
-				};
-			var response = await Http.PostAsJsonAsync(Configuration["CoursesGraphQLApiUri"], categoriesQuery);
-			if (response.IsSuccessStatusCode)
-			{
-				var jsonResponse = await response.Content.ReadAsStringAsync();
-				var result = System.Text.Json.JsonSerializer.Deserialize<DynamicGraphQLResponse>(jsonResponse);
+	// private async Task LoadCategoriesAsync()
+	// {
+	// 	try
+	// 	{
+	// 		var categoriesQuery = new GraphQLQuery
+	// 			{
+	// 				Query = "{ getCourses { categoryEntity { id name } } }"
+	// 			};
+	// 		var response = await Http.PostAsJsonAsync(Configuration["CoursesGraphQLApiUri"], categoriesQuery);
+	// 		if (response.IsSuccessStatusCode)
+	// 		{
+	// 			var jsonResponse = await response.Content.ReadAsStringAsync();
+	// 			var result = System.Text.Json.JsonSerializer.Deserialize<DynamicGraphQLResponse>(jsonResponse);
 
-				var categoryArray = result!.Data.GetProperty("getCourses").EnumerateArray()
-					.Select(course => new CategoryModel
-						{
-							Id = course.GetProperty("categoryEntity").GetProperty("id").GetInt32(),
-							Name = course.GetProperty("categoryEntity").GetProperty("name").GetString()!
-						})
-					.ToList() ?? new List<CategoryModel>();
+	// 			var categoryArray = result!.Data.GetProperty("getCourses").EnumerateArray()
+	// 				.Select(course => new CategoryModel
+	// 					{
+	// 						Id = course.GetProperty("categoryEntity").GetProperty("id").GetInt32(),
+	// 						Name = course.GetProperty("categoryEntity").GetProperty("name").GetString()!
+	// 					})
+	// 				.ToList() ?? new List<CategoryModel>();
 
-				Categories = categoryArray
-					.GroupBy(c => c.Id)
-					.Select(g => g.First())
-					.ToList();
-			}
-		}
-		catch (Exception ex)
-		{
-			MessageText = $"Something went wrong while loading categories. Try again! {ex}";
-			MessageType = "error";
-		}
-	}
+	// 			Categories = categoryArray
+	// 				.GroupBy(c => c.Id)
+	// 				.Select(g => g.First())
+	// 				.ToList();
+	// 		}
+	// 	}
+	// 	catch (Exception ex)
+	// 	{
+	// 		MessageText = $"error: Something went wrong while loading categories. Try again! {ex}";
+	// 	}
+	// }
 
 	public void OnCategoryChange(ChangeEventArgs e)
 	{
@@ -216,11 +210,6 @@
 		}
 	}
 
-	private bool IsInAccountManageSection()
-	{
-		return NavigationManager.Uri.Contains("account/manage", StringComparison.OrdinalIgnoreCase);
-	}
-
 	private void CreateNewCourse()
 	{
 		NavigationManager.NavigateTo("/create-course");
@@ -231,18 +220,7 @@
 		NavigationManager.NavigateTo($"/edit-course/{course.Id}");
 	}
 
-	private async Task DeleteCourse(string courseId)
-	{
-		var deleteCourseMutation = @"
-        mutation($id: String!) {
-            deleteCourse(id: $id)
-        }";
-
-		var input = new { id = courseId };
-
-		var result = await GraphQLService.ExecuteQuery<bool>(deleteCourseMutation, input);
-		Console.WriteLine($"Deleted course: {result}");
-	}
+	
 
 }
 
