@@ -1,7 +1,7 @@
 ﻿.course-item {
     @include shadow-l;
     border-radius: 8px;
-   
+
 
     @include lg {
         width: 100%;
@@ -14,42 +14,6 @@
             border: none;
             border-radius: 8px;
             width: 100%;
-        }
-
-        .btn-sell {
-            height: 40px;
-            width: 40px;
-            background-color: var(--color-white);
-            border: none;
-            position: absolute;
-            border-radius: 50%;
-            top: 15px;
-            right: 15px;
-            z-index: 2;
-
-            i {
-                font-size: 15px;
-            }
-
-            &:hover {
-                background-color: var(--color-theme);
-
-                i {
-                    color: var(--color-white);
-                }
-            }
-        }
-
-        .badge {
-            position: absolute;
-            top: 15px;
-            left: 13px;
-            z-index: 2;
-            background-color: var(--color-success-dark);
-            padding: 5px 12px;
-            font-size: 15px;
-            font-weight: 400;
-            color: var(--color-white);
         }
     }
 
@@ -110,5 +74,11 @@
                 gap: 7px;
             }
         }
+    }
+
+    .button-group{
+        padding: 15px;
+        display: flex;
+        gap: 10px;
     }
 }

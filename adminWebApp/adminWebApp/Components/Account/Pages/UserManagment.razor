@@ -44,7 +44,12 @@
 		<div class="modal-content">
 			<span class="close" @onclick="CloseUpdateUserModal"><i class="fas fa-times"></i></span>
 			<h2 class="form-content">Update User</h2>
-			 <StatusMessage Message="@errorMessage" />
+			@if (!string.IsNullOrEmpty(@errorMessage))
+			{
+				<StatusMessage Message="@errorMessage" />
+			} 
+			
+			
 			@if (!string.IsNullOrEmpty(selectedUser.UserProfile?.ProfileImg))
 			{
 				<img src="@selectedUser.UserProfile.ProfileImg" alt="Profile"  />
@@ -138,6 +143,7 @@
 
 	private async Task HandleUpdateUser()
 	{
+
 		if (selectedUser != null)
 		{
 			try
@@ -149,9 +155,9 @@
 					selectedUser.NormalizedEmail = selectedUser.Email;
 
 				}
-				
-				var updateUrl = Configuration["User_Update_Api_Uri"]!.Replace("{userId}", selectedUser.Id);
+				var updateUrl = Configuration[$"User_Update_Api_Uri"]!.Replace("{userId}", selectedUser.Id);
 				var result = await Http.PutAsJsonAsync(updateUrl, selectedUser);
+
 				if (result.IsSuccessStatusCode)
 				{
 					errorMessage = "Success: The user's data successfully updated!";
@@ -160,9 +166,10 @@
 				errorMessage = "Error: Something went wrong, please try later!";
 				CloseUpdateUserModal();
 			}
-			catch 
+			catch
 			{
 				errorMessage = "Error: Something went wrong, please try later!";
+
 			}
 		}
 	}
@@ -185,6 +192,7 @@
 	private void CloseUpdateUserModal()
 	{
 		selectedUser = null!;
+		errorMessage = null!;
 	}
 
 

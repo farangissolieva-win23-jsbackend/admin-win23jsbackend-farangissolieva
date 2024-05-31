@@ -1,8 +1,9 @@
 ﻿#users {
     .container {
-        h2{
+        h2 {
             left: 5px;
-        } 
+        }
+
         .content-contaier {
             padding-top: 50px;
             padding-bottom: 60px;
@@ -24,6 +25,11 @@
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
+
+                img {
+                    width: 100px;
+                    height: 100px;
+                }
 
                 .buttons {
                     margin: 20px 0;

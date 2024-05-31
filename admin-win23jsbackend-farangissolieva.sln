@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "adminWebApp", "adminWebApp\adminWebApp\adminWebApp.csproj", "{6DA54255-A80D-4257-BA89-43F211D628BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "adminWebApp", "adminWebApp\adminWebApp\adminWebApp.csproj", "{6DA54255-A80D-4257-BA89-43F211D628BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "adminWebApp.Client", "adminWebApp\adminWebApp.Client\adminWebApp.Client.csproj", "{3388516A-6923-4284-834A-40B41EB926A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "adminWebApp.Client", "adminWebApp\adminWebApp.Client\adminWebApp.Client.csproj", "{3388516A-6923-4284-834A-40B41EB926A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

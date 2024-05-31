@@ -1,0 +1,258 @@
+﻿@page "/courses/addcourse"
+@using adminWebApp.Models
+@using adminWebApp.Services
+@inject GraphQLService GraphQLService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+@if (CourseForm != null)
+{
+    <div class="singleCourse">
+        <div class="container">
+            <h1>Create New Course</h1>
+            <EditForm Model="CourseForm" FormName="addcourse" OnValidSubmit="HandleValidSubmit" novalidate>
+                <DataAnnotationsValidator />
+
+                <div class="input-group">
+                    <label>Title:</label>
+                    <InputText @bind-Value="CourseForm.Title" />
+                </div>
+                <div class="input-group">
+                    <label>Ingress:</label>
+                    <InputTextArea @bind-Value="CourseForm.Ingress" />
+                </div>
+                <div class="input-group">
+                    <label>Hours:</label>
+                    <InputText @bind-Value="CourseForm.Hours" />
+                </div>
+                <div class="input-group">
+                    <label>Image Header URL:</label>
+                    <InputText @bind-Value="CourseForm.ImgHeaderUrl" />
+                </div>
+
+                <div class="input-group">
+                    <label>Reviews:</label>
+                    <InputTextArea @bind-Value="CourseForm.Reviews" />
+                </div>
+                <div class="input-group">
+                    <label>Likes:</label>
+                    <InputTextArea @bind-Value="CourseForm.Likes" />
+                </div>
+                <div class="input-group">
+                    <label>Like Percentage:</label>
+                    <InputText @bind-Value="CourseForm.LikePercentage" />
+                </div>
+                
+                <div class="input-group">
+                    <label>Content Description:</label>
+                    <InputTextArea @bind-Value="CourseForm.Content.Description" />
+                </div>
+
+                <div class="input-group">
+                    <label>Program Details:</label>
+                    @if (CourseForm.Content != null && CourseForm.Content.ProgramDetails != null)
+                    {
+                        @foreach (var detail in CourseForm.Content.ProgramDetails)
+                        {
+                            @if(detail != null)
+                            {
+                                <div class="input-group">
+                                    <label>Title:</label>
+                                    <InputText @bind-Value="detail.Title" />
+                                    <label>Description:</label>
+                                    <InputTextArea @bind-Value="detail.Description" />
+                                </div>
+                            }
+                            
+                        }
+                    }
+                </div>
+                                           
+                <div class="input-group">
+                    <label>Price:</label>
+                    <InputNumber @bind-Value="CourseForm.Prices.Price" />
+                </div>
+                <div class="input-group">
+                    <label>Discount:</label>
+                    <InputNumber @bind-Value="CourseForm.Prices.Discount" />
+                </div>
+                <div class="input-group">
+                    <label>Is Bestseller:</label>
+                    <InputCheckbox @bind-Value="CourseForm.IsBestseller" />
+                </div>
+                <div class="input-group">
+                    <label>Is Digital:</label>
+                    <InputCheckbox @bind-Value="CourseForm.IsDigital" />
+                </div>
+                      
+                <div class="input-group">
+                    <label>Author Name:</label>
+                    <InputText @bind-Value="CourseForm.Authors[0].AuthorName" />
+                    <label>Author Description:</label>
+                    <InputTextArea @bind-Value="CourseForm.Authors[0].AuthorDescription" />
+                    <label>Author Image URL:</label>
+                    <InputText @bind-Value="CourseForm.Authors[0].AuthorImageUrl" />
+                    <label>Subscribers:</label>
+                    <InputNumber @bind-Value="CourseForm.Authors[0].Subscribers" />
+                    <label>Followers:</label>
+                    <InputNumber @bind-Value="CourseForm.Authors[0].Followers" />
+                </div>
+                
+                <div class="button-group input-group">
+                    <button class="btn-theme" type="submit">Create Course</button>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+
+
+}
+else
+{
+    <p>Loading...</p>
+}
+
+
+
+@code {
+    [Parameter]
+    public string? CourseId { get; set; }
+
+    [SupplyParameterFromForm]
+    private Course CourseForm { get; set; } = null!;
+       
+
+    protected override async Task OnInitializedAsync()
+    {
+        CourseForm = new Course
+            {
+                Prices = new(),
+                Content = new()
+                {
+                    ProgramDetails = new List<ProgramDetailItem>
+                    {
+                     new ProgramDetailItem {Id =1, Title = "", Description = "" } 
+                    }
+                },
+                Authors = new List<Author>()
+            };
+    }
+
+       
+    private async Task HandleValidSubmit()
+    {
+        bool success = await AddCourseAsync(CourseForm);
+        if (success)
+        {
+            Navigation.NavigateTo("/account/courses");
+        }
+        else
+        {
+
+        }
+    }
+
+    private async Task<bool> AddCourseAsync(Course course)
+    {
+        var createCourseMutation = @"mutation($input: CourseCreateRequestInput!) { createCourse(input: $input) {
+               
+                title
+                imgUrl
+                imgHeaderUrl
+                isDigital
+                isBestseller
+                ingress
+                reviews
+                likes
+                likePercentage
+                hours
+                authors {
+                    id
+                    authorName
+                    authorDescription
+                    authorImageUrl
+                    subscribers
+                    followers
+                }
+                prices {
+                    currency
+                    price
+                    discount
+                }
+                content {
+                    description
+                    includes
+                    programDetails {
+                        id
+                        title
+                        description}}
+        }}";
+        var input = new
+        {
+            input = new CourseCreateRequest
+                {
+                    Title = course.Title,
+                    ImageUrl = course.ImgUrl,
+                    ImageHeaderUrl = course.ImgHeaderUrl,
+                    IsDigital = course.IsDigital,
+                    IsBestseller = course.IsBestseller,
+                    Ingress = course.Ingress,
+                    Reviews = course.Reviews,
+                    Likes = course.Likes,
+                    LikePercentage = course.LikePercentage,
+                    Hours = course.Hours,
+                    Authors = course.Authors?.Select(author => new AuthorCreateRequest
+                    {
+                        Id = author.Id,
+                        AuthorName = author.AuthorName,
+                        AuthorDescription = author.AuthorDescription,
+                        AuthorImageUrl = author.AuthorImageUrl,
+                        Subscribers = author.Subscribers,
+                        Followers = author.Followers
+                    }).ToList(),
+                    Prices = new PriceCreateRequest
+                    {
+                        Currency = course.Prices?.Currency,
+                        Price = course.Prices?.Price ?? 0,
+                        Discount = course.Prices?.Discount ?? 0
+                    },
+                    Content = new ContentCreateRequest
+                    {
+                        Description = course.Content?.Description,
+                        Includes = course.Content?.Includes,
+                        ProgramDetails = course.Content?.ProgramDetails?.Select(detail => new ProgramDetailItemCreateRequest
+                        {
+                            Id = detail.Id,
+                            Title = detail.Title,
+                            Description = detail.Description
+                        }).ToList()
+                    }
+
+                }
+        };
+        try
+        {
+            var response = await Http.PostAsJsonAsync(Configuration["CoursesGraphQLApiUri"], new { query = createCourseMutation, variables = input });
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine(ex);
+            return false;
+        }
+
+    }
+
+
+
+
+}

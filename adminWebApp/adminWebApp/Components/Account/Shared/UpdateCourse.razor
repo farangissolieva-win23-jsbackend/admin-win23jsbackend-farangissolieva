@@ -1,0 +1,340 @@
+﻿@page "/courses/course/{courseId}"
+@using adminWebApp.Models
+@using adminWebApp.Services
+@inject GraphQLService GraphQLService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+@if (CourseForm != null)
+{
+    <div class="singleCourse">
+        <div class="container">
+            <h1>Course Update</h1>
+            <EditForm Model="CourseForm" FormName="updatecourse" OnValidSubmit="HandleValidSubmit" novalidate>
+                <DataAnnotationsValidator />
+                
+                <div class="input-group">
+                    <label>Title:</label>
+                    <InputText @bind-Value="CourseForm.Title" />
+                </div>
+                <div class="input-group">
+                    <label>Ingress:</label>
+                    <InputTextArea @bind-Value="CourseForm.Ingress" />
+                </div>
+                <div class="input-group">
+                    <label>Hours:</label>
+                    <InputText @bind-Value="CourseForm.Hours" />
+                </div>
+                <div class="input-group">
+                    <label>Image Header URL:</label>
+                    <InputText @bind-Value="CourseForm.ImgHeaderUrl" />
+                </div>
+               
+                <div class="input-group">
+                    <label>Reviews:</label>
+                    <InputTextArea @bind-Value="CourseForm.Reviews" />
+                </div>
+                <div class="input-group">
+                    <label>Likes:</label>
+                    <InputTextArea @bind-Value="CourseForm.Likes" />
+                </div>
+                <div class="input-group">
+                    <label>Like Percentage:</label>
+                    <InputText @bind-Value="CourseForm.LikePercentage" />
+                </div>
+                @if (!string.IsNullOrEmpty(CourseForm.Content?.Description))
+                {
+                    <div class="input-group">
+                        <label>Content Description:</label>
+                        <InputTextArea @bind-Value="CourseForm.Content.Description" />
+                    </div>
+                }
+              
+                  @if (CourseForm.Content?.ProgramDetails!= null)
+                {
+                    <div class="input-group">
+                        <label>Program Details:</label>
+                        @foreach (var detail in CourseForm.Content.ProgramDetails)
+                        {
+                            <div class="input-group">
+                                <label>Title:</label>
+                                <InputText @bind-Value="detail.Title" />
+                                <label>Description:</label>
+                                <InputTextArea @bind-Value="detail.Description" />
+                            </div>
+                        }
+                    </div>
+                }
+                <div class="input-group">
+                    <label>Price:</label>
+                    <InputNumber @bind-Value="CourseForm.Prices.Price" />
+                </div>
+                <div class="input-group">
+                    <label>Discount:</label>
+                    <InputNumber @bind-Value="CourseForm.Prices.Discount" />
+                </div>
+                <div class="input-group">
+                    <label>Is Bestseller:</label>
+                    <InputCheckbox @bind-Value="CourseForm.IsBestseller" />
+                </div>
+                <div class="input-group">
+                    <label>Is Digital:</label>
+                    <InputCheckbox @bind-Value="CourseForm.IsDigital" />
+                </div>
+                @if (CourseForm.Authors != null)
+                {
+                    <div class="input-group">
+                        <label>Authors:</label>
+                        @foreach (var author in CourseForm.Authors)
+                        {
+                            <div class="input-group">
+                                <label>Author Name:</label>
+                                <InputText @bind-Value="author.AuthorName" />
+                                <label>Author Description:</label>
+                                <InputTextArea @bind-Value="author.AuthorDescription" />
+                                <label>Author Image URL:</label>
+                                <InputText @bind-Value="author.AuthorImageUrl" />
+                                <label>Subscribers:</label>
+                                <InputNumber @bind-Value="author.Subscribers" />
+                                <label>Followers:</label>
+                                <InputNumber @bind-Value="author.Followers" />
+                            </div>
+                        }
+                    </div>
+                }
+                            
+                <div class="button-group input-group">
+                    <button class="btn-theme" type="submit">Update Course</button>
+                </div>
+                
+            </EditForm>
+        </div>
+    </div>
+    
+ 
+}
+else
+{
+    <p>Loading...</p>
+}
+
+
+
+@code {
+    [Parameter]
+    public string? CourseId { get; set; }
+      
+    [SupplyParameterFromForm]
+    public Course CourseForm { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(CourseId))
+        {
+            await LoadCourseAsync(CourseId);
+
+        }
+      
+    }
+
+
+    private async Task LoadCourseAsync(string courseId)
+    {
+        try
+        {
+            var query = new GraphQLQuery
+                {
+                    Query = $"{{ getCourseById(id: \"{courseId}\") {{id title ingress likes imgUrl likePercentage isBestseller isDigital imgHeaderUrl hours reviews authors {{id authorName authorImageUrl authorDescription subscribers followers}} prices {{currency price discount}} content  {{description includes programDetails {{ id title description }} }} }} }}"
+                };
+
+            var response = await Http.PostAsJsonAsync(Configuration["CoursesGraphQLApiUri"], query);
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var result = System.Text.Json.JsonSerializer.Deserialize<DynamicGraphQLResponse>(jsonResponse);
+                var courseData = result?.Data.GetProperty("getCourseById");
+
+                if (courseData.HasValue)
+                {
+                    var course = courseData.Value;
+
+                    CourseForm = new Course
+                        {
+                            Id = course.GetProperty("id").GetString()!,
+                            Title = course.GetProperty("title").GetString(),
+                            ImgUrl = course.GetProperty("imgUrl").GetString(),
+                            ImgHeaderUrl = course.GetProperty("imgHeaderUrl").GetString(),
+                            IsDigital = course.GetProperty("isDigital").GetBoolean(),
+                            IsBestseller = course.GetProperty("isBestseller").GetBoolean(),
+                            Ingress = course.GetProperty("ingress").GetString(),
+                            Reviews = course.GetProperty("reviews").GetString(),
+                            Likes = course.GetProperty("likes").GetString(),
+                            LikePercentage = course.GetProperty("likePercentage").GetString(),
+                            Hours = course.GetProperty("hours").GetString(),
+
+                            Authors = course.GetProperty("authors").EnumerateArray().Select(author => new Author
+                            {
+                                Id = author.GetProperty("id").GetInt32(),
+                                AuthorName = author.GetProperty("authorName").GetString(),
+                                AuthorDescription = author.GetProperty("authorDescription").GetString(),
+                                AuthorImageUrl = author.GetProperty("authorImageUrl").GetString(),
+                                Subscribers = author.GetProperty("subscribers").GetInt32(),
+                                Followers = author.GetProperty("followers").GetInt32()
+                            }).ToList(),
+
+                            Prices = new Prices
+                            {
+                                Currency = course.GetProperty("prices").GetProperty("currency").GetString(),
+                                Price = course.GetProperty("prices").GetProperty("price").GetDecimal(),
+                                Discount = course.GetProperty("prices").GetProperty("discount").GetDecimal()
+                            },
+
+                            Content = new Content
+                            {
+                                Description = course.GetProperty("content").TryGetProperty("description", out var descriptionProp) ? descriptionProp.GetString() : string.Empty,
+                                Includes = course.GetProperty("content").TryGetProperty("includes", out var includesProp) ? includesProp.EnumerateArray().Select(x => x.GetString()).ToArray() : Array.Empty<string>(),
+
+                                ProgramDetails = course.GetProperty("content").TryGetProperty("programDetails", out var programDetailsProp) ?
+                                 programDetailsProp.EnumerateArray().Select(detail => new ProgramDetailItem
+                                 {
+                                     Id = detail.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : 0,
+                                     Title = detail.TryGetProperty("title", out var titleProp) ? titleProp.GetString() : string.Empty,
+                                     Description = detail.TryGetProperty("description", out var descriptionProp) ? descriptionProp.GetString() : string.Empty
+                                 }).ToList() : new List<ProgramDetailItem>()
+                            }
+                    };
+                }
+                
+            }
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine(ex);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        bool success = await UpdateCourseAsync(CourseForm);
+        if (success)
+        {
+            Navigation.NavigateTo("/account/courses");
+        }
+        else
+        {
+
+        }
+    }
+
+    private async Task<bool> UpdateCourseAsync(Course course)
+    {
+        var updateCourseMutation = @"mutation($input: CourseUpdateRequestInput!) { updateCourse(input: $input) {
+                id
+                title
+                imgUrl
+                imgHeaderUrl
+                isDigital
+                isBestseller
+                ingress
+                reviews
+                likes
+                likePercentage
+                hours
+                authors {
+                    id
+                    authorName
+                    authorDescription
+                    authorImageUrl
+                    subscribers
+                    followers
+                }
+                prices {
+                    currency
+                    price
+                    discount
+                }
+                content {
+                    description
+                    includes
+                    programDetails {
+                        id
+                        title
+                        description}}
+        }}";
+        var input = new
+        {
+            input = new CourseUpdateRequest
+                {
+                    Id = course.Id,
+                    Title = course.Title,
+                    ImageUrl = course.ImgUrl,
+                    ImageHeaderUrl = course.ImgHeaderUrl,
+                    IsDigital = course.IsDigital,
+                    IsBestseller = course.IsBestseller,
+                    Ingress = course.Ingress,
+                    Reviews = course.Reviews,
+                    Likes = course.Likes,
+                    LikePercentage = course.LikePercentage,
+                    Hours = course.Hours,
+                    Authors = course.Authors?.Select(author => new AuthorUpdateRequest
+                    {
+                        Id = author.Id,
+                        AuthorName = author.AuthorName,
+                        AuthorDescription = author.AuthorDescription,
+                        AuthorImageUrl = author.AuthorImageUrl,
+                        Subscribers = author.Subscribers,
+                        Followers = author.Followers
+                    }).ToList(),
+                    Prices = new PriceUpdateRequest
+                    {
+                        Currency = course.Prices?.Currency,
+                        Price = course.Prices?.Price ?? 0,
+                        Discount = course.Prices?.Discount ?? 0
+                    },
+                    Content = new ContentUpdateRequest
+                    {
+                        Description = course.Content?.Description,
+                        Includes = course.Content?.Includes,
+                        ProgramDetails = course.Content?.ProgramDetails?.Select(detail => new ProgramDetailItemUpdateRequest
+                        {
+                            Id = detail.Id,
+                            Title = detail.Title,
+                            Description = detail.Description
+                        }).ToList()
+                    }
+
+                }
+        };
+        try
+        {
+            var response = await Http.PostAsJsonAsync(Configuration["CoursesGraphQLApiUri"], new { query = updateCourseMutation, variables = input });
+            if (response.IsSuccessStatusCode)
+            {
+                return true;    
+            }
+            else
+            {
+                return false;
+            }    
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine(ex);
+            return false;
+        }
+
+    }
+    
+
+ 
+
+    public class UserCourseModel
+    {
+        public string CourseId { get; set; } = null!;
+
+    }
+
+
+}
